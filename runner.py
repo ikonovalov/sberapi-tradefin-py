@@ -17,12 +17,20 @@ def receive_response_as_text(connection):
 BASIC_AUTH = os.getenv('BASIC_AUTH')
 CLIENT_ID = os.getenv('CLIENT_ID')
 
+# Объявим namespaces, т.к. мы в основном будем работать с XML
+ns = {
+    'es' : 'http://model.tfido.escrow.sbrf.ru'
+}
+
 # настройка TLS
-context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-context.verify_mode = ssl.CERT_NONE
+ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+ctx.verify_mode = ssl.CERT_NONE
 # Загружаем файлы ключа и сертификаты для TLS в формате PEM (текстовый)
-context.load_cert_chain(certfile=f'{CLIENT_ID}.crt', keyfile=f'{CLIENT_ID}.key')
-conn = http.client.HTTPSConnection(host="api.sberbank.ru", context=context)
+ctx.load_cert_chain(
+    certfile=f'{CLIENT_ID}.crt',
+    keyfile=f'{CLIENT_ID}.key'
+)
+conn = http.client.HTTPSConnection(host="api.sberbank.ru", context=ctx)
 
 # получение Token
 payload = "grant_type=client_credentials&scope=https://api.sberbank.ru/escrow"
@@ -51,8 +59,7 @@ conn.request("GET", "/ru/prod/v2/escrow/residential-complex", headers=headers)
 rc = receive_response_as_text(conn)
 #print(rc)
 root = ET.fromstring(rc)
-ns = '{http://model.tfido.escrow.sbrf.ru}'
-for certs in root.findall(f'{ns}authorizedRepresentative/{ns}baseInfo/{ns}lastName'):
+for certs in root.findall('es:authorizedRepresentative/es:baseInfo/es:lastName', ns):
     print(f'---> {certs.text}')
 
 # Получение списка счетов
