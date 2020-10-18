@@ -8,7 +8,10 @@ def receive_response_as_text(connection):
     response = connection.getresponse()
     response_bytes = response.read()
     response_text = response_bytes.decode("utf-8")
-    return response_text
+    if response.status == 200:
+        return response_text
+    else:
+        raise Exception(response_text)
 
 
 BASIC_AUTH = os.getenv('BASIC_AUTH')
@@ -46,8 +49,34 @@ headers = {
 
 conn.request("GET", "/ru/prod/v2/escrow/residential-complex", headers=headers)
 rc = receive_response_as_text(conn)
-print(rc)
+#print(rc)
 root = ET.fromstring(rc)
 ns = '{http://model.tfido.escrow.sbrf.ru}'
-for certs in root.findall(f'{ns}authorizedRepresentative/{ns}baseInfo/{ns}certificateSerial'):
-    print(certs.text)
+for certs in root.findall(f'{ns}authorizedRepresentative/{ns}baseInfo/{ns}lastName'):
+    print(f'---> {certs.text}')
+
+# Получение списка счетов
+headers = {
+    'x-ibm-client-id': f'{CLIENT_ID}',
+    'authorization': f'Bearer {token}',
+    'x-introspect-rquid': "784d2386006a49afa0e6d9e0e4001102",
+    'content-type': "application/x-www-form-urlencoded",
+    'accept': "application/xml"
+}
+payload = "commisioningObjectCode=0001&startReportDate=2020-08-20&endReportDate=2020-08-22&limit=1000&offset=0"
+conn.request("POST", "/ru/prod/v2/escrow/account-list", payload, headers)
+rc = receive_response_as_text(conn)
+# print(rc)
+
+# Получение списка операций по счетам
+headers = {
+    'x-ibm-client-id': f'{CLIENT_ID}',
+    'authorization': f'Bearer {token}',
+    'x-introspect-rquid': "784d2386006a49afa0e6d9e0e4001102",
+    'content-type': "application/x-www-form-urlencoded",
+    'accept': "application/xml"
+}
+payload = "commisioningObjectCode=0001&startReportDate=2020-08-20&endReportDate=2020-09-22&limit=1000&offset=0"
+conn.request("POST", "/ru/prod/v2/escrow/account-oper-list", payload, headers)
+rc = receive_response_as_text(conn)
+print(rc)
