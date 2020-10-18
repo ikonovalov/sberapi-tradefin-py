@@ -3,11 +3,13 @@ import os
 import json
 import xml.etree.ElementTree as ET
 
+
 def receive_response_as_text(connection):
     response = connection.getresponse()
     response_bytes = response.read()
     response_text = response_bytes.decode("utf-8")
     return response_text
+
 
 BASIC_AUTH = os.getenv('BASIC_AUTH')
 CLIENT_ID = os.getenv('CLIENT_ID')
@@ -35,15 +37,14 @@ token = json.loads(token)
 token = token['access_token']
 print(f'Token id = {token}')
 
-
 headers = {
-    'x-ibm-client-id':  f'{CLIENT_ID}',
+    'x-ibm-client-id': f'{CLIENT_ID}',
     'authorization': f'Bearer {token}',
     'x-introspect-rquid': "784d2386006a49afa0e6d9e0e4001101",
     'accept': "application/xml"
 }
 
-conn.request("GET", "/ru/prod/v2/escrow/residential-complex", headers = headers)
+conn.request("GET", "/ru/prod/v2/escrow/residential-complex", headers=headers)
 rc = receive_response_as_text(conn)
 print(rc)
 root = ET.fromstring(rc)
