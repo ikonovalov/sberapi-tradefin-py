@@ -8,7 +8,7 @@ def receive_response_as_text(connection):
     response = connection.getresponse()
     response_bytes = response.read()
     response_text = response_bytes.decode("utf-8")
-    if response.status == 200:
+    if response.status / 100 == 2:  # 2xx codes only
         return response_text
     else:
         raise Exception(response_text)
